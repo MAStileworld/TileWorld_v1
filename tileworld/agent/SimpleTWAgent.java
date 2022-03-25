@@ -36,7 +36,7 @@ public class SimpleTWAgent extends TWAgent{
     protected TWThought think() {
 
 //        getMemory().getClosestObjectInSensorRange(Tile.class);
-        System.out.println("Simple Score: " + this.score);
+        // System.out.println("Simple Score: " + this.score);
         Object object = memory.getMemoryGrid().get(x, y);
 
         if(object instanceof TWTile && carriedTiles.size() < 3){
@@ -48,8 +48,10 @@ public class SimpleTWAgent extends TWAgent{
         }else {
             TWPath path = twPlanner.generatePlan();
             if (path == null){
+                //System.out.println(this.name+" random walking");
                 return new TWThought(TWAction.MOVE, getRandomDirection());
             }else {
+                //System.out.println(this.name+" moving to obj");
                 TWPathStep pathStep = path.popNext();
                 return new TWThought(TWAction.MOVE, pathStep.getDirection());
             }

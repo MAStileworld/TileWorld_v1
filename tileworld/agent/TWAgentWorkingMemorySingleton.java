@@ -41,7 +41,6 @@ public class TWAgentWorkingMemorySingleton {
     private int memorySize;
 
 
-
     static private List<Int2D> spiral = new NeighbourSpiral(Parameters.defaultSensorRange * 4).spiral();
 
 
@@ -72,10 +71,10 @@ public class TWAgentWorkingMemorySingleton {
      * Called at each time step, updates the memory map of the agent.
      * Note that some objects may disappear or be moved, in which case part of
      * sensed may contain null objects
-     *
+     * <p>
      * Also note that currently the agent has no sense of moving objects, so
      * an agent may remember the same object at two locations simultaneously.
-     *
+     * <p>
      * Other agents in the grid are sensed and passed to this function. But it
      * is currently not used for anything. Do remember that an agent sense itself
      * too.
@@ -83,9 +82,9 @@ public class TWAgentWorkingMemorySingleton {
      * @param sensedObjects bag containing the sensed objects
      * @param objectXCoords bag containing x coordinates of objects
      * @param objectYCoords bag containing y coordinates of object
-     * @param sensedAgents bag containing the sensed agents
-     * @param agentXCoords bag containing x coordinates of agents
-     * @param agentYCoords bag containing y coordinates of agents
+     * @param sensedAgents  bag containing the sensed agents
+     * @param agentXCoords  bag containing x coordinates of agents
+     * @param agentYCoords  bag containing y coordinates of agents
      */
 
     public void updateMemory(TWAgent currentAgent, Bag sensedObjects, IntBag objectXCoords, IntBag objectYCoords, Bag sensedAgents, IntBag agentXCoords, IntBag agentYCoords) {
@@ -95,7 +94,7 @@ public class TWAgentWorkingMemorySingleton {
         int sensorRange = Parameters.defaultSensorRange;
         for (int i = agentX - sensorRange; i <= agentX + sensorRange; i++) {
             for (int j = agentY - sensorRange; j <= agentY + sensorRange; j++) {
-                if(currentAgent.getEnvironment().isInBounds(i, j)) {
+                if (currentAgent.getEnvironment().isInBounds(i, j)) {
                     boolean isFound = false;
                     for (Object obj : sensedObjects.objs) {
                         if (obj instanceof TWEntity && ((TWEntity) obj).getX() == i && ((TWEntity) obj).getY() == j) {
@@ -105,13 +104,16 @@ public class TWAgentWorkingMemorySingleton {
                             TWAgentPercept previousPercept = objects[o.getX()][o.getY()];
                             if (previousPercept == null) {
                                 addObject(o);
+
                             } else {
                                 TWEntity previous = previousPercept.getO();
                                 if (previous == null || !previous.getClass().isInstance(o)) {
                                     if (previous == null) {
                                         addObject(o);
-                                    }else {
+
+                                    } else {
                                         replaceObject(o);
+
                                     }
 
                                 } else {
@@ -136,14 +138,32 @@ public class TWAgentWorkingMemorySingleton {
                 }
             }
         }
+        decayMemory();
     }
 
-    public void replaceObject(TWEntity entity){
-        objects[entity.getX()][entity.getX()] = new TWAgentPercept(entity, schedule.getTime());
+    public void decayMemory() {
+        // put some decay on other memory pieces (this will require complete
+        // iteration over memory though, so expensive.
+        //This is a simple example of how to do this.
+        for (int x = 0; x < this.objects.length; x++) {
+            for (int y = 0; y < this.objects[x].length; y++) {
+                TWAgentPercept currentMemory = objects[x][y];
+                if (currentMemory == null) {
+                    // do nothing
+                } else if (currentMemory.getO() instanceof TWObject && currentMemory.getT() < schedule.getTime() - MAX_TIME) {
+                    memoryGrid.set(x, y, null);
+                    memorySize--;
+                }
+            }
+        }
+    }
+
+    public void replaceObject(TWEntity entity) {
+        objects[entity.getX()][entity.getY()] = new TWAgentPercept(entity, schedule.getTime());
         memoryGrid.set(entity.getX(), entity.getY(), entity);
     }
 
-    public void addObject(TWEntity entity){
+    public void addObject(TWEntity entity) {
         replaceObject(entity);
         memorySize++;
     }
@@ -156,7 +176,7 @@ public class TWAgentWorkingMemorySingleton {
         memoryGrid.set(x, y, null);
     }
 
-    public void removeObject(TWEntity o){
+    public void removeObject(TWEntity o) {
         removeObject(o.getX(), o.getY());
     }
 
@@ -187,24 +207,22 @@ public class TWAgentWorkingMemorySingleton {
     }
 
 
-
     /**
      * Returns the nearest object that has been remembered recently where recently
      * is defined by a number of timesteps (threshold)
-     *
+     * <p>
      * If no Object is in memory which has been observed in the last threshold
      * timesteps it returns the most recently observed object. If there are no objects in
      * memory the method returns null. Note that specifying a threshold of one
      * will always return the most recently observed object. Specifying a threshold
      * of MAX_VALUE will always return the nearest remembered object.
-     *
+     * <p>
      * Also note that it is likely that nearby objects are also the most recently observed
      *
-     *
-     * @param sx coordinate from which to check for objects
-     * @param sy coordinate from which to check for objects
+     * @param sx        coordinate from which to check for objects
+     * @param sy        coordinate from which to check for objects
      * @param threshold how recently we want to have seen the object
-     * @param type the class of object we're looking for (Must inherit from TWObject, specifically tile or hole)
+     * @param type      the class of object we're looking for (Must inherit from TWObject, specifically tile or hole)
      * @return
      */
     private TWObject getNearbyObject(int sx, int sy, double threshold, Class<?> type) {
@@ -256,6 +274,12 @@ public class TWAgentWorkingMemorySingleton {
                 }
             }
         }
+//        if (closestEntity != null){
+//            System.out.println(agent.getName()+":");
+//            System.out.println("closest entity: " + closestEntity.getClass() + " (" + closestEntity.getX() + "," +
+//                    closestEntity.getY() + ")" + schedule.getSteps());
+//        }
+
         return closestEntity;
     }
 

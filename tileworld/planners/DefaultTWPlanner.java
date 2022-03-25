@@ -44,7 +44,7 @@ import tileworld.environment.*;
 public class DefaultTWPlanner implements TWPlanner {
     private TWEnvironment env;
     private TWAgent agent;
-    private static final int maxDistance = 10;
+    private static final int maxDistance = Integer.MAX_VALUE;
     private TWPathGenerator pathGenerator;
 
     public DefaultTWPlanner(TWEnvironment env, SimpleTWAgent agent){
